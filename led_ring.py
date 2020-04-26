@@ -78,8 +78,8 @@ class LedRing:
                 current =self.combine(current, s)
                 self.display(client2, current)
                 time.sleep(waittime)
-            self.clear(client2)
-            self.clear(client2)
+            self.display(client2,self.current)
+            self.display(client2,self.current)
         except:
             traceback.print_exc()
     def toLed(self, color):
