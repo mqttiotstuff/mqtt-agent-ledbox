@@ -13,8 +13,7 @@ class LedRing:
         self.tworing = 25
         self.onering = int(self.tworing/2)
         self.current = self.feed(self.all_leds, (0,0,0))
-        self.post = self.feed(self.all_leds, (0,0,0))
-        self.remanence = 0.3
+        self.remanence = 0.8
 
     def feed(self, nb, color):
         s = ""
@@ -37,14 +36,8 @@ class LedRing:
     def display(self, client, s):
         if not s:
             s = self.current
-        self.post = self.add(self.fade(self.post), s)
-        toDisplay = self.add(self.fade(self.current, self.remanence), self.fade(self.post))
-        self.current = self.combine(self.current, toDisplay)
+        self.current = self.combine(self.current, s)
         client.publish(self.mqtttopic, self.current)
-
-    def clear(self, client):
-        self.current = self.feed(self.all_leds, (0,0,0)) 
-        self.display(client, self.current) 
 
     def fade(self, s, stage = 0.5):
         retvalue = ""
@@ -55,9 +48,16 @@ class LedRing:
         return retvalue;
 
     def add(self, s1,s2):
+        if s1 is None:
+            s1 = self.feed(self.all_leds, (0,0,0))
+
+        if s2 is None:
+            s2 = self.feed(self.all_leds, (0,0,0))
+
         retvalue = ""
         assert len(s1) == len (s2)
         for i in range(0,len(s1)):
+            v = 0
             v = ord(s1[i]) + ord(s2[i])
             if v > 128:
                 v = 128
@@ -67,7 +67,23 @@ class LedRing:
     def combine(self, s1,s2):
         return self.add(self.fade(s1),self.fade(s2))
 
-    def movering(self, client2, direction, color, waittime = 0.3):
+    def pixel(self, pixel, color):
+        s = ""
+        for i in range(0, self.all_leds):
+            s += self.toLed((0,0,0)) if pixel != i else self.toLed(color)
+        return s
+
+    #############################################################################
+
+    # generator
+    def clear(self, client):
+        empty =  self.feed(self.all_leds, (0,0,0)) 
+        for i in range(0,10):
+            yield empty
+
+
+    # generator
+    def movering(self, client2, direction, color):
         try:
             s = ""
             assert color != None
@@ -75,24 +91,13 @@ class LedRing:
             current = self.feed(self.all_leds, (0,0,0))
             for i in range(f,t,s):
                 s =self.ring(i,color)
-                current =self.combine(current, s)
-                self.display(client2, current)
-                time.sleep(waittime)
-            self.display(client2,self.current)
-            self.display(client2,self.current)
+                yield self.combine(current, s)
         except:
             traceback.print_exc()
+
     def toLed(self, color):
         (g,r,b) = color
         s = ""
         s += chr(g) + chr(r) + chr(b)
         return s
-
-    def pixel(self, pixel, color):
-        s = ""
-        for i in range(0, self.all_leds):
-            s += self.toLed((0,0,0)) if pixel != i else self.toLed(color)
-        return s
-
-
 
