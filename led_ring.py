@@ -5,7 +5,6 @@ import time
 
 class LedRing:
 
-
     def __init__(self, mqtttopic):
         assert mqtttopic != None
         self.mqtttopic = mqtttopic
@@ -13,6 +12,7 @@ class LedRing:
         self.tworing = 25
         self.onering = int(self.tworing/2)
         self.current = self.feed(self.all_leds, (0,0,0))
+        self.post = self.feed(self.all_leds, (0,0,0))
         self.remanence = 0.8
 
     def feed(self, nb, color):
@@ -32,11 +32,12 @@ class LedRing:
         message = prefix + r + suffix
         return message[0:self.all_leds * 3] 
 
-
     def display(self, client, s):
         if not s:
             s = self.current
-        self.current = self.combine(self.current, s)
+        self.post = self.add(self.post, s)
+        self.current = self.combine(self.current, self.post)
+        self.post = self.fade(self.post)
         client.publish(self.mqtttopic, self.current)
 
     def fade(self, s, stage = 0.5):

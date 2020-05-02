@@ -37,11 +37,13 @@ generatorQueue = queue.Queue()
 
 client2 = None
 
+# generator
 def wave(client, color):
     # wave
     return sequence(ledring.movering(client2, 1, color), \
     ledring.movering(client2, 2, color))
 
+# generator
 def sequence (f1,f2):
     if not f1 is None:
         for i in f1:
@@ -50,6 +52,7 @@ def sequence (f1,f2):
         for j in f2:
             yield j
 
+# generator
 def combine(f1,f2):
 
     while not (f1 is None and f2 is None):
@@ -66,6 +69,15 @@ def combine(f1,f2):
             except StopIteration:
                 f2 = None
         yield ledring.add(s, s2)
+
+
+def normaliseColor(c, level):
+    (c1,c2,c3) = c
+    v = (c1 + c2 + c3) / 3.0
+    ratio = level * 1.0 / v
+    return (min( int(ratio*c1), 255), (min( int(ratio*c2), 255)), (min( int(ratio*c3), 255)))
+
+
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
@@ -85,12 +97,13 @@ def on_connect(client, userdata, flags, rc):
     except:
         traceback.print_exc()
 
-red = (0,100,0)
-green = (100,0,0)
-blue = (0,0,100)
+level = 50
+red = normaliseColor((0,100,0),level)
+green = normaliseColor((100,0,0),level)
+blue = normaliseColor((0,0,100),level)
 
-pink = (192,255,203)
-purple = (0,148,211)
+pink = normaliseColor((192,255,203),level)
+purple = normaliseColor((0,148,211),level)
 
 
 def run(generator):
