@@ -12,6 +12,7 @@ import paho.mqtt.client as mqtt
 import random
 import time
 import traceback
+import re
 
 from configparser import ConfigParser
 from configparser import RawConfigParser
@@ -147,7 +148,16 @@ def on_message(client, userdata, msg):
        if msg.topic == ALERTE_TOPIC:
            try:
                print(msg.payload)
-               run(wave(client2, red))
+               s = msg.payload.decode("utf-8")
+               print(s)
+               c = re.compile("^([0-9]+),([0-9]+),([0-9]+)$")
+               m = c.match(s)
+               if not m is None:
+                   color = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+                   print(color)
+                   run(wave(client2, color))
+               else:
+                   run(wave(client2, red))
 
            except:
                traceback.print_exc()
@@ -204,6 +214,7 @@ class MainThread(threading.Thread):
         global username
         global password
         global mqttbroker
+        count = 5
         client2 = mqtt.Client(clean_session=True, userdata=None, protocol=mqtt.MQTTv311)
         client2.username_pw_set(username,password)
         client2.connect(mqttbroker, 1883, 5)
@@ -222,10 +233,16 @@ class MainThread(threading.Thread):
                     except StopIteration:
                         currentGenerator = None
 
-                if s is None:
-                    s = ledring.feed(ledring.all_leds, (0,0,0))
+                if s is not None:
+                    count = 5
 
-                ledring.display(client2,s)
+                if s is None:
+                    count = count - 1
+                    if count > 0:
+                        s = ledring.feed(ledring.all_leds, (0,0,0))
+
+                if s is not None:
+                    ledring.display(client2,s)
 
                 try:
                     # pump generator and combine with previous if exists
@@ -238,7 +255,7 @@ class MainThread(threading.Thread):
                     pass
             except:
                 traceback.print_exc()
-            time.sleep(0.2)
+            time.sleep(0.1)
 
 
 mainThread = MainThread()
