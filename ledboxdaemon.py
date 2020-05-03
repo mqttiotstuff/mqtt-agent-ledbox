@@ -22,13 +22,16 @@ import unicodedata
 
 from led_ring import *
 
+
 import threading
 import queue
 
 config = RawConfigParser()
 
-ALERTE_TOPIC="home/agents/ledbox/alerte"
-BLUEWAVE_TOPIC="home/agents/ledbox/bluewave"
+ALERTE_TOPIC="home/agents/ledbox/alert"
+WAVE_TOPIC="home/agents/ledbox/wave"
+DOTS_TOPIC="home/agents/ledbox/dots"
+DOTS_TOPIC2="home/agents/ledbox/dots2"
 TEST_TOPIC="home/agents/ledbox/test"
 INTERRUPTOR="home/esp13/sensors/interrupt"
 
@@ -37,46 +40,6 @@ ledring = LedRing("home/esp13/actuators/ledstrip")
 generatorQueue = queue.Queue()
 
 client2 = None
-
-# generator
-def wave(client, color):
-    # wave
-    return sequence(ledring.movering(client2, 1, color), \
-    ledring.movering(client2, 2, color))
-
-# generator
-def sequence (f1,f2):
-    if not f1 is None:
-        for i in f1:
-            yield i
-    if not f2 is None:
-        for j in f2:
-            yield j
-
-# generator
-def combine(f1,f2):
-
-    while not (f1 is None and f2 is None):
-        s = None
-        if f1 != None:
-            try:
-                s = next(f1)
-            except StopIteration:
-                f1 = None
-        s2 = None
-        if f2 != None:
-            try:
-                s2 = next(f2)
-            except StopIteration:
-                f2 = None
-        yield ledring.add(s, s2)
-
-
-def normaliseColor(c, level):
-    (c1,c2,c3) = c
-    v = (c1 + c2 + c3) / 3.0
-    ratio = level * 1.0 / v
-    return (min( int(ratio*c1), 255), (min( int(ratio*c2), 255)), (min( int(ratio*c3), 255)))
 
 
 
@@ -88,7 +51,9 @@ def on_connect(client, userdata, flags, rc):
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         client.subscribe(ALERTE_TOPIC)
-        client.subscribe(BLUEWAVE_TOPIC)
+        client.subscribe(WAVE_TOPIC)
+        client.subscribe(DOTS_TOPIC)
+        client.subscribe(DOTS_TOPIC2)
         client.subscribe(TEST_TOPIC)
         client.subscribe(INTERRUPTOR + "1")
         client.subscribe(INTERRUPTOR + "2")
@@ -99,69 +64,100 @@ def on_connect(client, userdata, flags, rc):
         traceback.print_exc()
 
 level = 50
-red = normaliseColor((0,100,0),level)
-green = normaliseColor((100,0,0),level)
+red = normaliseColor((100,0,0),level)
+green = normaliseColor((0,100,0),level)
 blue = normaliseColor((0,0,100),level)
 
-pink = normaliseColor((192,255,203),level)
-purple = normaliseColor((0,148,211),level)
+pink = normaliseColor((255,192,203),level)
+purple = normaliseColor((148,0,211),level)
 
 
 def run(generator):
     assert generator != None
-    print("add generator")
     generatorQueue.put(generator) 
+
+def decodeColor(payload):
+    try:
+        # R,G,B
+        s = payload.decode("utf-8")
+        c = re.compile("^([0-9]+),([0-9]+),([0-9]+)$")
+        m = c.match(s)
+        if not m is None:
+            color = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            return color
+        return None # not decoded
+    except:
+        traceback.print_exc()
+    
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     global client2
     try:
        # print str(msg)
-       print("message " + str(msg))
+       # print("message " + str(msg))
        if msg.topic.startswith(INTERRUPTOR):
            try:
-               print(msg.payload)
+               # print(msg.payload)
                if msg.payload == b'1':
                    color = blue
                    if msg.topic == INTERRUPTOR + "1":
-                       run(sequence(wave(client2, blue), ledring.clear(client2)))
+                       run(ledring.sequence(ledring.wave(blue), ledring.clear()))
                    if msg.topic == INTERRUPTOR + "2":
-                       run(sequence(wave(client2, green), ledring.clear(client2)))
+                       run(ledring.sequence(ledring.wave(green), ledring.clear()))
                    if msg.topic == INTERRUPTOR + "3":
-                       run(sequence(wave(client2, purple), ledring.clear(client2)))
+                       run(ledring.sequence(ledring.wave(purple), ledring.clear()))
                    if msg.topic == INTERRUPTOR + "4":
-                       run(sequence(wave(client2, pink), ledring.clear(client2)))
+                       run(ledring.sequence(ledring.wave(pink), ledring.clear()))
                    return;
 
            except:
                traceback.print_exc()
 
-#       if msg.topic == BLUEWAVE_TOPIC:
-#           try:
-#               run(wave(client2, blue))
-#               run(ledring.clear(client2))
-#               run(ledring.clear(client2))
-#           except:
-#               traceback.print_exc()
-
-
        if msg.topic == ALERTE_TOPIC:
            try:
-               print(msg.payload)
-               s = msg.payload.decode("utf-8")
-               print(s)
-               c = re.compile("^([0-9]+),([0-9]+),([0-9]+)$")
-               m = c.match(s)
-               if not m is None:
-                   color = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-                   print(color)
-                   run(wave(client2, color))
+               color = decodeColor(msg.payload)
+               if not color is None:
+                   run(ledring.flash(color))
                else:
-                   run(wave(client2, red))
+                   # if not parsable, put red
+                   run(ledring.flash(red))
 
            except:
                traceback.print_exc()
 
+       if msg.topic == DOTS_TOPIC:
+           try:
+               color = decodeColor(msg.payload)
+               if not color is None:
+                   run(ledring.sequence(ledring.dotAnim(color, 1, 4), ledring.clear()))
+               else:
+                   print("the color does not correspond to expected format : r,v,b")
+           except:
+               traceback.print_exc()
+
+       if msg.topic == DOTS_TOPIC2:
+           try:
+               color = decodeColor(msg.payload)
+               if not color is None:
+                   run(ledring.sequence(ledring.dotAnim(color, 7,15), ledring.clear()))
+               else:
+                   print("the color does not correspond to expected format : r,v,b")
+           except:
+               traceback.print_exc()
+
+
+
+       if msg.topic == WAVE_TOPIC:
+           try:
+               color = decodeColor(msg.payload)
+               if not color is None:
+                   run(ledring.wave(color))
+               else:
+                   print("the color does not correspond to expected format : r,v,b")
+
+           except:
+               traceback.print_exc()
 
 
        if msg.topic == TEST_TOPIC:
@@ -175,7 +171,6 @@ def on_message(client, userdata, msg):
                            s = s + (chr(0) + chr(0) + chr(0))
                        else:
                            s = s + (chr(127) + chr(127) + chr(127))
-               print(len(s))
 
                # client2.publish("home/esp13/actuators/led8", s) 
                print("done")
@@ -247,10 +242,8 @@ class MainThread(threading.Thread):
                 try:
                     # pump generator and combine with previous if exists
                     incomingGenerator = generatorQueue.get(timeout=0.005)
-                    print("get iterator")
                     assert incomingGenerator != None
-                    currentGenerator = combine(currentGenerator, incomingGenerator);
-                    print(currentGenerator)
+                    currentGenerator = ledring.parallel(currentGenerator, incomingGenerator);
                 except queue.Empty:
                     pass
             except:
