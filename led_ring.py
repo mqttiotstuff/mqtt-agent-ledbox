@@ -1,9 +1,14 @@
 
-
 import traceback
 import time
+import random
 
-black = (0,0,0)
+black = (0 ,0 ,0)
+
+green = (0,100,0)
+red = (100,0,0)
+blue = (0,0,100)
+white = (255,255,255)
 
 class LedRing:
 
@@ -12,22 +17,28 @@ class LedRing:
         self.mqtttopic = mqtttopic
         self.all_leds = 70
         self.tworing = 25
-        self.onering = int(self.tworing/2)
+        self.onering = int(self.tworing /2)
         self.current = self.feed(self.all_leds, black)
         self.post = self.feed(self.all_leds, black)
         self.remanence = 0.8
 
+    def toLed(self, color):
+        (r ,g ,b) = color
+        s = ""
+        s += chr(g) + chr(r) + chr(b)
+        return s
+
     def feed(self, nb, color):
         s = ""
-        (r,g,b) = color
-        for i in range(0,nb):
+        (r ,g ,b) = color
+        for i in range(0 ,nb):
             s = s + self.toLed(color)
         return s
 
     def ring(self, h, color):
         prefix = self.feed(h * int(self.onering), black)
         r = self.feed(self.onering, color)
-        suffix_size = self.all_leds - int(len(prefix)/3) - int(len(r)/3)
+        suffix_size = self.all_leds - int(len(prefix ) /3) - int(len(r ) /3)
         suffix = ""
         if suffix_size > 0:
             suffix = self.feed(suffix_size, black)
@@ -35,8 +46,8 @@ class LedRing:
         # strip result
         return message[0:self.all_leds * 3] 
 
-    # create dots patterns
-    def space(self, color, length = 10, shift = 0, space = 10):
+    # create dots patterns frame
+    def space(self, color, length=10, shift=0, space=10):
         s = ""
         while len(s) < self.all_leds * 3:
 
@@ -55,7 +66,7 @@ class LedRing:
             spacel = self.feed(int(space), black)
             r = self.feed(length, color)
             s = r + spacel + s
-        s = s[ 3 * shift:]
+        s = s[3 * shift:]
 
         # strip result
         returned = s[0:self.all_leds * 3] 
@@ -65,141 +76,239 @@ class LedRing:
         except AssertionError:
             print(len(returned))
 
-    def fade(self, s, stage = 0.5):
+    def fade(self, led_frame, stage = 0.5):
+        """
+        change the brightness level of a led frame
+        :param led_frame:
+        :param stage: the factor, must be < 1
+        :return: the modified led_frame
+        """
         retvalue = ""
-        for c in s:
+        for c in led_frame:
             n = ord(c)
             n = int(n * stage)
             retvalue += chr(n)
         return retvalue;
 
-    def add(self, s1,s2):
-        if s1 is None:
-            s1 = self.feed(self.all_leds, black)
+    def add(self, led_frame1, led_frame2):
+        if led_frame1 is None:
+            led_frame1 = self.feed(self.all_leds, black)
 
-        if s2 is None:
-            s2 = self.feed(self.all_leds, black)
+        if led_frame2 is None:
+            led_frame2 = self.feed(self.all_leds, black)
 
         retvalue = ""
-        assert len(s1) == len (s2)
-        for i in range(0,len(s1)):
+        assert len(led_frame1) == len (led_frame2)
+        for i in range(0, len(led_frame1)):
             v = 0
-            v = ord(s1[i]) + ord(s2[i])
+            v = ord(led_frame1[i]) + ord(led_frame2[i])
             if v > 128:
                 v = 128
             retvalue += chr(v)
         return retvalue
 
-    def combine(self, s1,s2):
-        return self.add(self.fade(s1),self.fade(s2))
+    def combine(self, led_frame1, led_frame2):
+        """
+        mix two led frame
+        :param led_frame1:
+        :param led_frame2:
+        :return:
+        """
+        return self.add(self.fade(led_frame1), self.fade(led_frame2))
 
     def pixel(self, pixel, color):
+        """
+        create a one pixel frame
+        :param pixel: the pixel number
+        :param color: the pixel color
+        :return:
+        """
         s = ""
         for i in range(0, self.all_leds):
             s += self.toLed(black) if pixel != i else self.toLed(color)
         return s
 
+    def display(self, client, led_frame):
+        """
+        This function send the current frame s to client "client"
 
-
-    def display(self, client, s):
-        if not s:
-            s = self.current
-        self.post = self.add(self.post, s)
+        :param client:
+        :param led_frame: the led frame to display
+        :return:
+        """
+        if not led_frame:
+            led_frame = self.current
+        self.post = self.add(self.post, led_frame)
         self.current = self.combine(self.current, self.post)
         self.post = self.fade(self.post)
         client.publish(self.mqtttopic, self.current)
 
+    #############################################################################
+    # patterns led frames
+
+    def square_pattern(self, color, nbpatterns=2, square_size=3):
+        s2 = None
+        for i in range(0, nbpatterns):
+            setpOffset = int(self.onering / nbpatterns) * i
+            square = self.add(
+                self.add(self.space(color, square_size, 20 + setpOffset, 50),
+                            self.space(color, square_size, 20 + self.onering + setpOffset, 50)
+                            ), self.space(color, square_size, 20 + 2 * self.onering + setpOffset, 50))
+
+            if s2 is None:
+                s2 = square
+            else:
+                s2 = self.add(s2, square)
+        return s2
+
 
     #############################################################################
+    # colors generators
 
-    # generator
+    def linear_color(self ,fromcolor, tocolor, size = 10):
+        """
+        create a linear color generator fromcolor tocolor, with a size number of frames
+        :param fromcolor:
+        :param tocolor:
+        :param size:
+        :return:
+        """
+        (a, b, c) = fromcolor
+        (a2, b2, c2) = tocolor
+
+        for i in range(0, size):
+            yield (int((a2 -a) / size * i + a),
+                   int((b2 - b) / size * i + b),
+                   int((c2 - c) / size * i + c))
+
+    def fixed_color(self, color, framesize=20):
+        """
+        create a fixed color generator
+        :param color:
+        :return:
+        """
+        for i in range(0,framesize):
+            yield color
+
+    def rainbow_color(self, size=3):
+        """
+        create a rainbow color generator
+        :param size:
+        :return:
+        """
+        return self.sequence(
+            self.linear_color(blue,green, size=size),
+            self.linear_color(green, red, size=size)
+        )
+
+
+    #############################################################################
+    # frame generators
+
     def clear(self):
+        """
+        ten frame display remove
+        :return: a generator with black led_frames
+        """
         empty =  self.feed(self.all_leds, black) 
-        for i in range(0,10):
+        for i in range(0 ,10):
             yield empty
 
 
-    # generator
-    def movering(self,direction, color):
+    # generator for moving ring on the display
+    def movering(self ,direction, color):
         try:
             s = ""
-            assert color != None
-            (f,t,s) = (0,6,1) if direction == 1 else (5,-1,-1)
+            assert color is not None
+            (f ,t ,s) = (0 ,6 ,1) if direction == 1 else (5 ,-1 ,-1)
             current = self.feed(self.all_leds, black)
-            for i in range(f,t,s):
-                s =self.ring(i,color)
+            for i in range(f ,t ,s):
+                s =self.ring(i, color)
                 yield self.combine(current, s)
         except:
             traceback.print_exc()
 
-    # generator
+    # generator for creating a color flash
     def flash(self, color):
+
         buf = self.feed(self.all_leds, color)
 
-        for i in range(0,10):
+        for i in range(0, 10):
             yield buf
 
         buf = self.feed(self.all_leds, black)
-        for i in range(0,10):
+        for i in range(0, 10):
             yield buf
 
-
-    # generator
-    def wave(self,color):
+    # generator for generating a wave
+    def wave(self, color):
         # wave
         return self.sequence(self.movering(1, color), \
-            self.movering(2, color))
+                             self.movering(2, color))
+    def rain(self, color):
+        return self.dotAnim(color,length=1,space=27)
 
-    def dotAnim (self, color, length, space):
-        for i in range(0,2*(length + space)):
+    # generator for dots
+    def dotAnim(self, color, length, space):
+        for i in range(0, 2 * (length + space)):
             yield self.dots(color, length, i, space)
 
-    def toLed(self, color):
-        (r,g,b) = color
-        s = ""
-        s += chr(g) + chr(r) + chr(b)
-        return s
+    def colored_square(self,color_generator, nbpatterns=2, squaresize=2):
+        for i in color_generator:
+            yield  self.square_pattern(i, nbpatterns=nbpatterns, square_size=squaresize)
 
-    # generator
-    def sequence (self, f1,f2):
-        if not f1 is None:
-            for i in f1:
+    def randomDotColor(self):
+        for i in range(0, self.all_leds):
+            randomColor = (g, r, b) = (random.randint(0, 80), random.randint(0, 80), random.randint(0, 80))
+            yield self.add(self.pixel(i, randomColor),
+                              self.pixel(self.all_leds - i, randomColor))
+
+    ############################################################"
+    # generator combiners
+
+    # generator with a sequence of frames
+    def sequence(self, frame_generator1, frame_generator2):
+        if not frame_generator1 is None:
+            for i in frame_generator1:
                 yield i
-        if not f2 is None:
-            for j in f2:
+        if not frame_generator2 is None:
+            for j in frame_generator2:
                 yield j
 
+    def slow(self, frame_generator):
+        for f in frame_generator:
+            yield f
+            yield f
 
+    def fast(self, frame_generator):
+        i = 0
+        for f in frame_generator:
+            if i == 0:
+                yield f
+            i = (i + 1) % 2
 
+    # generator for parallel sequences
+    def parallel(self, frame_generator1, frame_generator2, second_frame_shift=0):
 
-    # generator
-    def parallel(self, f1,f2):
-
-        while not (f1 is None and f2 is None):
+        while not (frame_generator1 is None and frame_generator2 is None):
             s = None
-            if f1 != None:
+            if frame_generator1 is not None:
                 try:
-                    s = next(f1)
+                    s = next(frame_generator1)
                 except StopIteration:
-                    f1 = None
+                    frame_generator1 = None
             s2 = None
-            if f2 != None:
+            second_frame_shift = second_frame_shift - 1
+            if frame_generator2 is not None and second_frame_shift <= 0:
                 try:
-                    s2 = next(f2)
+                    s2 = next(frame_generator2)
                 except StopIteration:
-                    f2 = None
+                    frame_generator2 = None
             yield self.add(s, s2)
 
 
-
-############################################################"
-#generator combiners
-
 def normaliseColor(c, level):
-    (c1,c2,c3) = c
+    (c1, c2, c3) = c
     v = (c1 + c2 + c3) / 3.0
     ratio = level * 1.0 / v
-    return (min( int(ratio*c1), 255), (min( int(ratio*c2), 255)), (min( int(ratio*c3), 255)))
-
-
-
+    return (min(int(ratio * c1), 255), (min(int(ratio * c2), 255)), (min(int(ratio * c3), 255)))

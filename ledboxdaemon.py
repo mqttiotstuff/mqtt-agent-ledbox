@@ -2,9 +2,6 @@
 #
 # MQTT agent to manage a LED screen
 #
-#
-#
-#
 
 
 
