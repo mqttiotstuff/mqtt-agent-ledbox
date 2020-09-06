@@ -22,7 +22,11 @@ class LedRing:
         self.post = self.feed(self.all_leds, black)
         self.remanence = 0.8
 
+    
     def toLed(self, color):
+        """
+            convert color (tuple), into led screen command string
+        """
         (r ,g ,b) = color
         s = ""
         s += chr(g) + chr(r) + chr(b)
@@ -201,7 +205,6 @@ class LedRing:
             self.linear_color(green, red, size=size)
         )
 
-
     #############################################################################
     # frame generators
 
@@ -229,15 +232,14 @@ class LedRing:
             traceback.print_exc()
 
     # generator for creating a color flash
-    def flash(self, color):
+    def flash(self, color, speed = 5):
 
         buf = self.feed(self.all_leds, color)
-
-        for i in range(0, 10):
+        for i in range(0, speed):
             yield buf
 
         buf = self.feed(self.all_leds, black)
-        for i in range(0, 10):
+        for i in range(0, speed + 5):
             yield buf
 
     # generator for generating a wave
@@ -246,7 +248,7 @@ class LedRing:
         return self.sequence(self.movering(1, color), \
                              self.movering(2, color))
     def rain(self, color):
-        return self.dotAnim(color,length=1,space=27)
+        return self.sequence(self.dotAnim(color,length=1,space=27), self.clear())
 
     # generator for dots
     def dotAnim(self, color, length, space):
@@ -312,3 +314,6 @@ def normaliseColor(c, level):
     v = (c1 + c2 + c3) / 3.0
     ratio = level * 1.0 / v
     return (min(int(ratio * c1), 255), (min(int(ratio * c2), 255)), (min(int(ratio * c3), 255)))
+
+
+

@@ -34,6 +34,7 @@ TEST_TOPIC="home/agents/ledbox/test"
 WATCHDOG_TOPIC="home/agents/ledbox/watchdog"
 
 INTERRUPTOR="home/esp13/sensors/interrupt"
+PRESENCE="home/esp13/sensors/presence"
 
 ledring = LedRing("home/esp13/actuators/ledstrip")
 
@@ -59,6 +60,7 @@ def on_connect(client, userdata, flags, rc):
         client.subscribe(INTERRUPTOR + "2")
         client.subscribe(INTERRUPTOR + "3")
         client.subscribe(INTERRUPTOR + "4")
+        client.subscribe(PRESENCE)
         print("End of registration")
     except:
         traceback.print_exc()
@@ -96,6 +98,13 @@ def on_message(client, userdata, msg):
     try:
        # print str(msg)
        # print("message " + str(msg))
+       if msg.topic.startswith(PRESENCE):
+           try:
+               if msg.payload == b'1':
+                   run(ledring.rain((0,10,0)))
+           except:
+               traceback.print_exc()
+
        if msg.topic.startswith(INTERRUPTOR):
            try:
                # print(msg.payload)
