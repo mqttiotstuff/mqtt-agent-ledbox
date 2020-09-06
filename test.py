@@ -124,14 +124,15 @@ l3 = ledring.fixed_color(uiblue)
 #            ledring.fast(ledring.colored_square(ledring.fixed_color(blue))),
 #            ledring.rain(blue), 10))
 
-display(ledring.parallel(
-    ledring.slow(ledring.rain(uipink)),
-    ledring.sequence(
-        ledring.fast(ledring.colored_square(ledring.fixed_color(uilightblue),
-                                            nbpatterns=3, squaresize=2)),
-        ledring.fast(ledring.colored_square(ledring.fixed_color(uigreen),
-                                            nbpatterns=6, squaresize=1)),
-    ), 15))
+for i in range(0,1000):
+    display(ledring.parallel(
+        ledring.slow(ledring.rain(uipink)),
+        ledring.sequence(
+            ledring.fast(ledring.colored_square(ledring.fixed_color(uilightblue),
+                                                nbpatterns=3, squaresize=2)),
+            ledring.fast(ledring.colored_square(ledring.fixed_color(uigreen),
+                                                nbpatterns=6, squaresize=1)),
+        ), 15))
 
 # display(ledring.sequence(movering(1,l2), movering(1,l2)))
 

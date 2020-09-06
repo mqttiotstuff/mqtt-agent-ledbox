@@ -30,6 +30,9 @@ WAVE_TOPIC="home/agents/ledbox/wave"
 DOTS_TOPIC="home/agents/ledbox/dots"
 DOTS_TOPIC2="home/agents/ledbox/dots2"
 TEST_TOPIC="home/agents/ledbox/test"
+
+WATCHDOG_TOPIC="home/agents/ledbox/watchdog"
+
 INTERRUPTOR="home/esp13/sensors/interrupt"
 
 ledring = LedRing("home/esp13/actuators/ledstrip")
@@ -144,7 +147,6 @@ def on_message(client, userdata, msg):
                traceback.print_exc()
 
 
-
        if msg.topic == WAVE_TOPIC:
            try:
                color = decodeColor(msg.payload)
@@ -215,6 +217,7 @@ class MainThread(threading.Thread):
         client2.loop_start()
         print("init done")
         currentGenerator = None
+        cptwatch = 0
         while True:
             try:
                 s = None
@@ -246,6 +249,9 @@ class MainThread(threading.Thread):
             except:
                 traceback.print_exc()
             time.sleep(0.1)
+            cptwatch = (cptwatch + 1) % 100
+            if cptwatch == 0:
+                client2.publish(WATCHDOG_TOPIC, "1")
 
 
 mainThread = MainThread()
