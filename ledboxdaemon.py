@@ -18,10 +18,14 @@ import os.path
 import unicodedata
 
 from led_ring import *
+import led_ring
 
+import time
 
 import threading
 import queue
+
+import expression
 
 config = RawConfigParser()
 
@@ -30,11 +34,15 @@ WAVE_TOPIC="home/agents/ledbox/wave"
 DOTS_TOPIC="home/agents/ledbox/dots"
 DOTS_TOPIC2="home/agents/ledbox/dots2"
 TEST_TOPIC="home/agents/ledbox/test"
+RUN_TOPIC="home/agents/ledbox/run"
 
 WATCHDOG_TOPIC="home/agents/ledbox/watchdog"
 
 INTERRUPTOR="home/esp13/sensors/interrupt"
 PRESENCE="home/esp13/sensors/presence"
+
+MONITOR_CHECK="home/monitoring/up"
+
 
 ledring = LedRing("home/esp13/actuators/ledstrip")
 
@@ -51,19 +59,26 @@ def on_connect(client, userdata, flags, rc):
 
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
+
         client.subscribe(ALERTE_TOPIC)
         client.subscribe(WAVE_TOPIC)
         client.subscribe(DOTS_TOPIC)
         client.subscribe(DOTS_TOPIC2)
         client.subscribe(TEST_TOPIC)
+        client.subscribe(RUN_TOPIC)
+
         client.subscribe(INTERRUPTOR + "1")
         client.subscribe(INTERRUPTOR + "2")
         client.subscribe(INTERRUPTOR + "3")
         client.subscribe(INTERRUPTOR + "4")
         client.subscribe(PRESENCE)
+
+        client.subscribe(MONITOR_CHECK)
+
         print("End of registration")
     except:
         traceback.print_exc()
+
 
 level = 50
 red = normaliseColor((100,0,0),level)
@@ -72,7 +87,6 @@ blue = normaliseColor((0,0,100),level)
 
 pink = normaliseColor((255,192,203),level)
 purple = normaliseColor((148,0,211),level)
-
 
 def run(generator):
     assert generator != None
@@ -91,19 +105,98 @@ def decodeColor(payload):
     except:
         traceback.print_exc()
     
+monitoring_lasttime = None
+
+
+def parseExpression(ledexpression):
+
+    functions= {
+                "sequence": ledring.sequence,
+                "slow": ledring.slow,
+                "fast": ledring.fast,
+                "parallel": ledring.parallel,
+                "shift": ledring.shift,
+
+                "cglinear": ledring.linear_color,
+                "cgcolor": ledring.fixed_color,
+                "cgrainbow": ledring.rainbow_color,
+                "cgswitch": ledring.switch_color,
+
+                "clear": ledring.clear,
+                "flash": ledring.flash,
+                "rain": ledring.rain,
+                "square": ledring.colored_square,
+                "random": ledring.randomDotColor,
+                "dotanim": ledring.dotAnim,
+                "movering": ledring.movering,
+                "wave": ledring.wave
+            }
+    
+    variables = { 
+        "black":black,
+
+        "green":green,
+        "red":red,
+        "blue":blue,
+        "white":white,
+
+        # colors from https://materialuicolors.co/
+        "uipink":uipink,
+        "uired":uired,
+        "uiblue":uiblue,
+        "uilightblue":uilightblue,
+        "uipurple":uipurple,
+        "uideeppurple":uideeppurple,
+        "uiindigo":uiindigo,
+        "uicyan":uicyan,
+        "uiteal":uiteal,
+        "uigreen":uigreen,
+        "uilightgreen":uilightgreen,
+        "uilime":uilime,
+        "uiyellow":uiyellow,
+        "uiamber":uiamber,
+        "uiorange":uiorange,
+        "uideeporange":uideeporange,
+        "uibrown":uibrown,
+        "uigrey":uigrey,
+        "uibluegrey":uibluegrey}
+
+
+    parser = expression.Expression_Parser(variables=variables, functions=functions,
+                                          assignment=False)
+    e = parser.parse(ledexpression)
+    return e
+
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
     global client2
+    global monitoring_lasttime
     try:
        # print str(msg)
        # print("message " + str(msg))
+
+       if msg.topic.startswith(MONITOR_CHECK):
+           monitoring_lasttime = time.monotonic_ns()
+
        if msg.topic.startswith(PRESENCE):
            try:
                if msg.payload == b'1':
-                   run(ledring.rain((0,10,0)))
+                   currenttime = time.monotonic_ns()
+                   if not monitoring_lasttime is None:
+                       if currenttime - monitoring_lasttime > 5_000_000_000:
+                           run(ledring.dotAnim(red,3,6))
+                           return
+                   run(ledring.rain(normaliseColor(uipurple, 10)))
            except:
                traceback.print_exc()
+       if msg.topic.startswith(RUN_TOPIC):
+           try:
+               led_expression = parseExpression(msg.payload.decode('utf-8'))
+               run(led_expression)
+           except:
+               traceback.print_exc()
+
 
        if msg.topic.startswith(INTERRUPTOR):
            try:
@@ -208,7 +301,8 @@ mqttbroker = config.get("agents","mqttbroker")
 
 client.username_pw_set(username,password)
 client.connect(mqttbroker, 1883, 5)
-client.will_set("home/agents/ledbox/lwt", payload="disconnected", qos=0, retain=False)
+client.will_set("home/agents/ledbox/lwt", 
+        payload="disconnected", qos=0, retain=False)
 
 
 class MainThread(threading.Thread):
