@@ -9,6 +9,8 @@ import random
 import time
 import traceback
 
+import functools
+
 from configparser import ConfigParser
 from configparser import RawConfigParser
 import os.path
@@ -70,7 +72,7 @@ def display(generator):
     # display the generator
     for e in generator:
         ledring.display(client2, e)
-        time.sleep(0.1)
+        time.sleep(0.2)
 
     for e in ledring.clear():
         ledring.display(client2, e)
@@ -94,45 +96,94 @@ def movering(direction, colorgenerator):
         assert colorgenerator is not None
         (f, t, s) = (0, 6, 1) if direction == 1 else (5, -1, -1)
         current = ledring.feed(ledring.all_leds, black)
+        last = None
         for i in range(f, t, s):
-
             try:
                 color = next(colorgenerator)
+                last = color
             except StopIteration:
                 pass
-            s = ledring.ring(i, color)
-            yield ledring.combine(current, s)
+            if last is not None:
+                s = ledring.ring(i, last)
+                yield ledring.combine(current, s)
     except:
         traceback.print_exc()
 
 
 l = ledring.linear_color(uiblue, uigreen, 5)
 
-l2 = ledring.rainbow_color(size=2)
+l2 = ledring.rainbow_color(size=10)
 l22 = ledring.rainbow_color(size=2)
 
 l3 = ledring.fixed_color(uiblue)
 
-# display(ledring.sequence(movering(1,l2), movering(0,l2)))
+#s = ledring.switch_color( colors=[uiindigo,uipink]   )
+## colors from https://materialuicolors.co/
+#uipink = (233, 30, 99)
+#uired = (244, 67, 54)
+#uiblue = (33, 150, 243)
+#uilightblue = (3, 169, 244)
+#uipurple = (156, 39, 176)
+#uideeppurple = (103, 58, 183)
+#uiindigo = (63, 81, 181)
+#uicyan = (0, 188, 212)
+#uiteal = (0, 150, 136)
+#uigreen = (76, 175, 80)
+#uilightgreen = (139, 195, 74)
+#uilime = (205, 220, 57)
+#uiyellow = (255, 235, 59)
+#uiamber = (255, 193, 7)
+#uiorange = (255, 152, 0)
+#uideeporange = (255, 87, 34)
+#uibrown = (121, 85, 72)
+#uigrey = (158, 158, 158)
+#uibluegrey = (96, 125, 139)
+#
+
+
+s = ledring.switch_color( colors=[uiblue,uired], times=2   )
+
+# display(ledring.dotAnimCg(s,7,3))
+
+sequence = ledring.parallel(
+                ledring.colored_square(ledring.fixed_color(blue), nbpatterns=3, squaresize=1),
+                ledring.colored_square(ledring.fixed_color(red), nbpatterns=3, squaresize=1, shift = 1),
+    3)
+display(sequence)
+
+#display(ledring.sequence(movering(direction=1,colorgenerator=l2),movering(direction=0,colorgenerator=l2)))
+
+# display(movering(direction=1,colorgenerator=s))
+
+# display(wave_and_dots(uipink))
 
 # display(ledring.parallel(movering(1,l2), movering(0,l3), 4))
 
 
 # ledring.display(client2, ledring.square_pattern(green))
+#
+#display(ledring.parallel(
+#            ledring.sequence(
+#                ledring.colored_square(ledring.fixed_color(blue), nbpatterns=6, squaresize=1),
+#                ledring.colored_square(ledring.fixed_color(white), nbpatterns=4, squaresize=2),
+#            ),
+#    ledring.parallel(
+#            ledring.rain(red),
+#            ledring.rain(blue),2)
+#        , 10))
 
-# display(ledring.parallel(
-#            ledring.fast(ledring.colored_square(ledring.fixed_color(blue))),
-#            ledring.rain(blue), 10))
 
-for i in range(0,1000):
-    display(ledring.parallel(
-        ledring.slow(ledring.rain(uipink)),
-        ledring.sequence(
-            ledring.fast(ledring.colored_square(ledring.fixed_color(uilightblue),
-                                                nbpatterns=3, squaresize=2)),
-            ledring.fast(ledring.colored_square(ledring.fixed_color(uigreen),
-                                                nbpatterns=6, squaresize=1)),
-        ), 15))
+
+#
+# for i in range(0,1):
+#     display(ledring.parallel(
+#         ledring.slow(ledring.rain(uipink)),
+#         ledring.sequence(
+#             ledring.fast(ledring.colored_square(ledring.fixed_color(uilightblue),
+#                                                 nbpatterns=3, squaresize=3)),
+#             ledring.fast(ledring.colored_square(ledring.fixed_color(uigreen),
+#                                               nbpatterns=2, squaresize=3)),
+#         ), 15))
 
 # display(ledring.sequence(movering(1,l2), movering(1,l2)))
 
