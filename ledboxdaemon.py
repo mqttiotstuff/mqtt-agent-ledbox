@@ -120,15 +120,32 @@ def parseExpression(ledexpression):
                 "cglinear": ledring.linear_color,
                 "cgcolor": ledring.fixed_color,
                 "cgrainbow": ledring.rainbow_color,
+                # switch colors at each step
                 "cgswitch": ledring.switch_color,
 
+                # clear
                 "clear": ledring.clear,
+
+                # take color, and speed (default to 5)
                 "flash": ledring.flash,
+
+                # take color
                 "rain": ledring.rain,
+
+                # create square patterns, take color generator, nbpatterns, square pattern size, and shift
+                
                 "square": ledring.colored_square,
+
+                # random dots moves
                 "random": ledring.randomDotColor,
+
+                # dots animation
                 "dotanim": ledring.dotAnim,
+
+                # take direction, and associated color
                 "movering": ledring.movering,
+                
+                # take colors
                 "wave": ledring.wave
             }
     
@@ -185,7 +202,7 @@ def on_message(client, userdata, msg):
                    currenttime = time.monotonic_ns()
                    if not monitoring_lasttime is None:
                        if currenttime - monitoring_lasttime > 5_000_000_000:
-                           run(ledring.dotAnim(red,3,6))
+                           run(ledring.dotAnim(red,1,6))
                            return
                    run(ledring.rain(normaliseColor(uipurple, 10)))
            except:

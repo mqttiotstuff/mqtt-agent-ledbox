@@ -117,6 +117,9 @@ class LedRing:
         return retvalue;
 
     def add(self, led_frame1, led_frame2):
+        """
+            add 2 frame content
+        """
         if led_frame1 is None:
             led_frame1 = self.feed(self.all_leds, black)
 
