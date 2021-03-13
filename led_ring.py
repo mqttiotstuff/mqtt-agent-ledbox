@@ -102,6 +102,25 @@ class LedRing:
         except AssertionError:
             print(len(returned))
 
+    def fill_patterns(self, color, space = 0, shift = 0):
+        s = ""
+        s = self.feed(int(shift), black)
+        while len(s) < (self.all_leds + 1) * 3:
+            spacel = self.feed(int(space), black)
+            r = self.feed(1, color)
+            s = s + r + spacel 
+
+
+        # strip result
+        returned = s[0:self.all_leds * 3]
+        try:
+            assert len(returned) == self.all_leds * 3
+            return returned
+        except AssertionError:
+            print(len(returned))
+
+
+
     def fade(self, led_frame, stage=0.5):
         """
         change the brightness level of a led frame
@@ -310,14 +329,64 @@ class LedRing:
     ############################################################"
     # generator combiners
 
+    # take a frame and convert it to frame_generator
+    def fg(self, frame, nbframe=4):
+        for i in range(0,nbframe):
+            yield frame
+
+    # convert binary method into multi parameters
+    def unroll(self, method, *args):
+        if len(args)>2:
+            first = args[0]
+            others = args[1:]
+            for i in method(first, method(*others)):
+                yield i
+        elif len(args) == 2:
+            frame_generator1 = args[0]
+            frame_generator2 = args[1]
+
+            if not frame_generator1 is None:
+                for i in frame_generator1:
+                    yield i
+            if not frame_generator2 is None:
+                for j in frame_generator2:
+                    yield j
+    
+    def sequence(self, *args):
+        return self.unroll(self.sequence2,*args)
+
+
     # generator with a sequence of frames
-    def sequence(self, frame_generator1, frame_generator2):
+    def sequence2(self, frame_generator1, frame_generator2):
         if not frame_generator1 is None:
             for i in frame_generator1:
                 yield i
         if not frame_generator2 is None:
             for j in frame_generator2:
                 yield j
+
+    def parallel(self, *args):
+        return self.unroll(self.parallel2, *args)
+
+    # generator for parallel sequences
+    def parallel2(self, frame_generator1, frame_generator2):
+
+        while not (frame_generator1 is None and frame_generator2 is None):
+            s = None
+            if frame_generator1 is not None:
+                try:
+                    s = next(frame_generator1)
+                except StopIteration:
+                    frame_generator1 = None
+            s2 = None
+            if frame_generator2 is not None:
+                try:
+                    s2 = next(frame_generator2)
+                except StopIteration:
+                    frame_generator2 = None
+            yield self.add(s, s2)
+
+
 
     # shift an animation
     def shift(self, frame_generator1, shift=10):
@@ -334,27 +403,6 @@ class LedRing:
             if i == 0:
                 yield f
             i = (i + 1) % 2
-
-    # generator for parallel sequences
-    def parallel(self, frame_generator1, frame_generator2, second_frame_shift=0):
-
-        while not (frame_generator1 is None and frame_generator2 is None):
-            s = None
-            if frame_generator1 is not None:
-                try:
-                    s = next(frame_generator1)
-                except StopIteration:
-                    frame_generator1 = None
-            s2 = None
-            second_frame_shift = second_frame_shift - 1
-            if frame_generator2 is not None and second_frame_shift <= 0:
-                try:
-                    s2 = next(frame_generator2)
-                except StopIteration:
-                    frame_generator2 = None
-            yield self.add(s, s2)
-
-
 def normaliseColor(c, level):
     (c1, c2, c3) = c
     v = (c1 + c2 + c3) / 3.0

@@ -32,3 +32,8 @@ sequence(square(cgcolor(blue),2,3), sequence(square(cgcolor(uired),2,1),sequence
 wave(blue)
 
 sequence(wave(blue), shift(wave(green), 30))
+
+parallel(shift(fg(fring(2,blue)),0),
+        shift(fg(fring(1,green,)),10),
+        shift(sequence(fg(fring(0,uipurple)), flash(uipurple)), 20))
+

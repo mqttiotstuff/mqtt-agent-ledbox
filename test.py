@@ -145,11 +145,35 @@ s = ledring.switch_color( colors=[uiblue,uired], times=2   )
 
 # display(ledring.dotAnimCg(s,7,3))
 
-sequence = ledring.parallel(
-                ledring.colored_square(ledring.fixed_color(blue), nbpatterns=3, squaresize=1),
-                ledring.colored_square(ledring.fixed_color(red), nbpatterns=3, squaresize=1, shift = 1),
-    3)
-display(sequence)
+# sequence = ledring.parallel(
+#                 ledring.colored_square(ledring.fixed_color(blue), nbpatterns=3, squaresize=1),
+#                 ledring.colored_square(ledring.fixed_color(red), nbpatterns=3, squaresize=1, shift = 2)
+#     )
+# display(sequence)
+# 
+
+# ledring.display(client2, ledring.ring(4, blue))
+
+# display(ledring.fg(ledring.ring(2,blue)))
+# display(ledring.fg(ledring.add(ledring.ring(0,blue), ledring.ring(4,red))))
+# 
+# display(ledring.fg(
+#     ledring.add(
+#     ledring.add(
+#         ledring.fill_patterns(red, space=ledring.onering/3),
+#         ledring.fill_patterns(blue, space=ledring.onering/3,shift =1)
+#         ),
+#         ledring.fill_patterns(green, space=ledring.onering/3, shift=2),
+#     )
+# ))
+# 
+
+display(ledring.sequence(ledring.flash(red),ledring.flash(green),ledring.flash(blue)))
+# display(ledring.sequence(ledring.flash(red),ledring.flash(green)))
+
+
+# display(ledring.fg(ledring.dots(red, length=ledring.all_leds, shift=0, space=2)))
+
 
 #display(ledring.sequence(movering(direction=1,colorgenerator=l2),movering(direction=0,colorgenerator=l2)))
 
@@ -157,7 +181,7 @@ display(sequence)
 
 # display(wave_and_dots(uipink))
 
-# display(ledring.parallel(movering(1,l2), movering(0,l3), 4))
+# display(ledring.parallel(movering(1,l2), ledring.shift(movering(0,l3), 4)))
 
 
 # ledring.display(client2, ledring.square_pattern(green))
@@ -170,7 +194,7 @@ display(sequence)
 #    ledring.parallel(
 #            ledring.rain(red),
 #            ledring.rain(blue),2)
-#        , 10))
+#        ))
 
 
 

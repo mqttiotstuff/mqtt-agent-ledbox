@@ -123,6 +123,22 @@ def parseExpression(ledexpression):
                 # switch colors at each step
                 "cgswitch": ledring.switch_color,
 
+
+                #### Frame constructor functions
+                "fg" : ledring.fg,
+                # 
+                "fpattern": ledring.fill_patterns,
+                "fadd": ledring.add,
+                "fpixel": ledring.pixel,
+
+                "fring": ledring.ring,
+                "fdots": ledring.dots,
+
+
+
+
+                ### Frame generator functions
+
                 # clear
                 "clear": ledring.clear,
 
@@ -133,7 +149,6 @@ def parseExpression(ledexpression):
                 "rain": ledring.rain,
 
                 # create square patterns, take color generator, nbpatterns, square pattern size, and shift
-                
                 "square": ledring.colored_square,
 
                 # random dots moves
@@ -141,6 +156,9 @@ def parseExpression(ledexpression):
 
                 # dots animation
                 "dotanim": ledring.dotAnim,
+
+                # dot animation with color generator
+                "dotanimcg": ledring.dotAnimCg,
 
                 # take direction, and associated color
                 "movering": ledring.movering,
