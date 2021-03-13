@@ -339,18 +339,12 @@ class LedRing:
         if len(args)>2:
             first = args[0]
             others = args[1:]
-            for i in method(first, method(*others)):
-                yield i
+            return method(first, self.unroll(method,*others))
+
         elif len(args) == 2:
             frame_generator1 = args[0]
             frame_generator2 = args[1]
-
-            if not frame_generator1 is None:
-                for i in frame_generator1:
-                    yield i
-            if not frame_generator2 is None:
-                for j in frame_generator2:
-                    yield j
+            return method(frame_generator1, frame_generator2)
     
     def sequence(self, *args):
         return self.unroll(self.sequence2,*args)
