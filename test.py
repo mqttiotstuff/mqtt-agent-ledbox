@@ -168,7 +168,7 @@ s = ledring.switch_color( colors=[uiblue,uired], times=2   )
 # ))
 # 
 
-display(ledring.sequence(ledring.flash(red),ledring.flash(green),ledring.flash(blue)))
+display(ledring.parallel(ledring.rain(red),ledring.shift(ledring.rain(green),4),ledring.rain(blue)))
 # display(ledring.sequence(ledring.flash(red),ledring.flash(green)))
 
 

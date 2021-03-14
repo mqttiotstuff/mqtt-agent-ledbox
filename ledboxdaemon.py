@@ -115,6 +115,7 @@ def parseExpression(ledexpression):
                 "slow": ledring.slow,
                 "fast": ledring.fast,
                 "parallel": ledring.parallel,
+                "parallel2": ledring.parallel2,
                 "shift": ledring.shift,
 
                 "cglinear": ledring.linear_color,
