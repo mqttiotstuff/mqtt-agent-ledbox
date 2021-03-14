@@ -14,6 +14,6 @@ parallel(parallel(dotanim(red, 1, 11),rain(blue)), dotanim(green,1,9))
 
 
 
-[See gallery for more examples](doc/gallery)
+[See gallery for more examples](doc/gallery.md)
 
-[See Reference for more information of the builtin functions](LedBox_Animations)
+[See Reference for more information of the builtin functions](LedBox_Animations.md)
