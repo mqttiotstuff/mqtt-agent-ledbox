@@ -1,4 +1,11 @@
+# Animation gallery examples
+
+
+
+
+
 ![](images/parallel_parallel_dotanim_red__1__11__rain_blue____dotanim_green_1_9__.avi.gif)
+
 parallel_parallel_dotanim_red__1__11__rain_blue____dotanim_green_1_9__.txt
 
 
