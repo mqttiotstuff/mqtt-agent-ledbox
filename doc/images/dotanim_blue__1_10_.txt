@@ -1,0 +1,1 @@
+dotanim(blue, 1,10)

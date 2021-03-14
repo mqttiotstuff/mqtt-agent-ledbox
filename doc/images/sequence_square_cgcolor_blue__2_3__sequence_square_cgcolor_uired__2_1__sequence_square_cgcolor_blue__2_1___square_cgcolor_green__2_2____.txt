@@ -1,0 +1,1 @@
+sequence(square(cgcolor(blue),2,3),sequence(square(cgcolor(uired),2,1),sequence(square(cgcolor(blue),2,1), square(cgcolor(green),2,2))))

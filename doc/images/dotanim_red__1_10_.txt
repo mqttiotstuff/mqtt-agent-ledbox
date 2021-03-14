@@ -1,0 +1,1 @@
+dotanim(red, 1,10)

@@ -1,0 +1,1 @@
+dotanim(green, 1,10)

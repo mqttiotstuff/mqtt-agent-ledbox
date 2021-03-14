@@ -1,0 +1,1 @@
+parallel(shift(fg(fring(2,blue)),0),shift(fg(fring(1,green,)),10),shift(sequence(fg(fring(0,uipurple)), flash(uipurple)), 20)),sequence(parallel(slow(slow(square(cgcolor(uipurple),4,2))), rain(blue)), clear())

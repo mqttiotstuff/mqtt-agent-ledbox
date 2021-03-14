@@ -1,0 +1,1 @@
+square(cgcolor(blue),3,3)

@@ -1,0 +1,1 @@
+parallel(parallel(dotanim(red, 1, 11),rain(blue)), dotanim(green,1,9))
