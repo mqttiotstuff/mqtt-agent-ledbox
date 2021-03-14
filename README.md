@@ -8,6 +8,7 @@ An animation example :
 
 ![](doc/images/parallel_parallel_dotanim_red__1__11__rain_blue____dotanim_green_1_9__.avi.gif)
 
+This animation is done on sending the following command on an mqtt topic
 ```
 parallel(parallel(dotanim(red, 1, 11),rain(blue)), dotanim(green,1,9))
 ```
