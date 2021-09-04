@@ -266,5 +266,7 @@ parallel(shift(fg(fring(2,blue)),0),
         shift(sequence(fg(fring(0,uipurple)), flash(uipurple)), 20))
 
 sequence(parallel(slow(slow(square(cgcolor(uipurple),4,2))), rain(blue)), clear())
+
+sequence(fg(fpixel(21,red),2),fg(fring(2,green)),fg(fpixel(22,red),2), clear()) 
 ```
 
