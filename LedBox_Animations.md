@@ -46,12 +46,13 @@ sequence(fg(fpixel(21,red),2),fg(fring(2,green)),fg(fpixel(22,red),2), clear())
 
 
 sequence(
-         parallel(
+         sequence(
+          fg(fring(0,green)),
          slow(sequence(
-                 fg(fpixel(21,red),2),
-                 fg(fpixel(22,red),2),
-                  fg(fpixel(23,red),2))),
-         fg(fring(2,green)))
+                 fg(fpixel(23,blue),5),
+                 fg(fpixel(22,white),5),
+                  fg(fpixel(21,red),5))),
+         fg(fring(2,red)))
          , clear()) 
          
 ```
