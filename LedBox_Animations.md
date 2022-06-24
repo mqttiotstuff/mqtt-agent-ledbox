@@ -172,6 +172,8 @@ the following colors are provided :
     "uigrey"
     "uibluegrey
 
+for creating an rgb defined color, use the `rgb` function, taking the r,g,b parameters.
+
 
 ### Animations
 
