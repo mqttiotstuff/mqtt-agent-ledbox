@@ -84,6 +84,8 @@ level = 50
 red = normaliseColor((100,0,0),level)
 green = normaliseColor((0,100,0),level)
 blue = normaliseColor((0,0,100),level)
+yellow = normaliseColor((100,100,0), level)
+orange = normaliseColor((100,50,0), level)
 
 pink = normaliseColor((255,192,203),level)
 purple = normaliseColor((148,0,211),level)
@@ -111,19 +113,19 @@ monitoring_lasttime = None
 def parseExpression(ledexpression):
 
     functions= {
+                # color construction
+                "rgb": ledring.rgb,
+
                 "sequence": ledring.sequence,
                 "slow": ledring.slow,
                 "fast": ledring.fast,
                 "parallel": ledring.parallel,
-                "parallel2": ledring.parallel2,
                 "shift": ledring.shift,
 
                 "cglinear": ledring.linear_color,
                 "cgcolor": ledring.fixed_color,
                 "cgrainbow": ledring.rainbow_color,
-                # switch colors at each step
                 "cgswitch": ledring.switch_color,
-
 
                 #### Frame constructor functions
                 "fg" : ledring.fg,
@@ -134,7 +136,6 @@ def parseExpression(ledexpression):
 
                 "fring": ledring.ring,
                 "fdots": ledring.dots,
-
 
 
 
@@ -175,6 +176,8 @@ def parseExpression(ledexpression):
         "red":red,
         "blue":blue,
         "white":white,
+        "yellow":yellow,
+        "orange":orange,
 
         # colors from https://materialuicolors.co/
         "uipink":uipink,

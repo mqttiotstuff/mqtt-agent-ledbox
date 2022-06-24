@@ -9,6 +9,8 @@ green = (0, 100, 0)
 red = (100, 0, 0)
 blue = (0, 0, 100)
 white = (255, 255, 255)
+orange = (100,50,0)
+yellow = (100,100,0)
 
 # colors from https://materialuicolors.co/
 uipink = (233, 30, 99)
@@ -60,6 +62,9 @@ class LedRing:
         for i in range(0, nb):
             s = s + self.toLed(color)
         return s
+
+    def rgb(self, r,g,b):
+        return (r,g,b)
 
     def ring(self, h, color):
         prefix = self.feed(h * int(self.onering), black)
@@ -135,7 +140,13 @@ class LedRing:
             retvalue += chr(n)
         return retvalue;
 
-    def add(self, led_frame1, led_frame2):
+    def add(self, *args):
+        if len(args) > 2:
+            return self.add2(args[0], self.add(*args[1:]))
+        assert len(args) == 2
+        return self.add2(args[0], args[1])
+
+    def add2(self, led_frame1, led_frame2):
         """
             add 2 frame content
         """
