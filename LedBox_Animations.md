@@ -72,7 +72,18 @@ fg(fpixel(10+12*4,blue)),
 clear()
 )
 
+## vumeter, descending
 
+sequence(
+        parallel(
+                fg(fpixel(10+12*4,green),20),
+                fg(fpixel(10+12*3,green),16),
+                fg(fpixel(10+12*2,green),12),
+                fg(fpixel(10+12,green),8),
+                fg(fpixel(10,green),4)
+                ),
+        clear()
+)
 
 
 ```
