@@ -55,6 +55,26 @@ sequence(
          fg(fring(2,red)))
          , clear()) 
          
+         
+sequence(
+fg(fpixel(9,green)),
+fg(fpixel(9,red)),
+slow(fg(fpixel(10,blue))),
+clear()
+)
+
+sequence(
+fg(fpixel(10,blue)),
+fg(fpixel(10+12,blue)),
+fg(fpixel(10+12*2,blue)),
+fg(fpixel(10+12*3,blue)),
+fg(fpixel(10+12*4,blue)),
+clear()
+)
+
+
+
+
 ```
 
 
