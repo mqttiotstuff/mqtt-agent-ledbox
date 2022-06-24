@@ -84,7 +84,19 @@ sequence(
                 ),
         clear()
 )
+With rainbow colors 
 
+
+sequence(
+        parallel(
+                fg(fpixel(10+12*4,green),20),
+                fg(fpixel(10+12*3,blue),16),
+                fg(fpixel(10+12*2,rgb(255,255,0)),12),
+                fg(fpixel(10+12,rgb(255,127,0)),8),
+                fg(fpixel(10,red),4)
+                ),
+        clear()
+)
 
 ```
 
@@ -136,6 +148,8 @@ the following colors are provided :
     "red
     "blue"
     "white"
+    "yellow"
+    "orange"
     
     # colors from https://materialuicolors.co/
     "uipink"
